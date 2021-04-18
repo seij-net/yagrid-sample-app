@@ -4,5 +4,5 @@ Sample `create-react-app` using yagrid, mainly used to test that npm packages ar
 
 # Usage
 
-* `npm init`
-* `npm run start`
+* `yarn`
+* `yarn run start`
