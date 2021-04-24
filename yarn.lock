@@ -1575,10 +1575,10 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
-"@seij/yagrid@0.1.6":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@seij/yagrid/-/yagrid-0.1.6.tgz#5789cd87cd16103d2befd3cf32d30d32410504ab"
-  integrity sha512-8Jiedh2ySAa4wPjYUzr+nhW2LRleYJCcwq/Z3oyGLmHbPQ563XtAeXRumVIIiX6YeF5uXGxYlkQrsXb0l4qweA==
+"@seij/yagrid@0.1.7":
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/@seij/yagrid/-/yagrid-0.1.7.tgz#aa75904648f073ee622e9623d10bb247df3bb445"
+  integrity sha512-AIX6oklhkyMN1WV0jTJLx4cZMyRGMC8d1xfdGpBVPNBCZr+jVL2nBNUbrcjE/8sc3omevVwIrTcHEIlCFW2e4A==
   dependencies:
     clsx "^1.1.1"
     lodash-es "^4.17.21"
