@@ -1,7 +1,15 @@
 import React from "react";
 import { ItemDelete, ItemAdd, ItemEdit, Grid, GridProps } from "@seij/yagrid";
 import {
+  useGrid,
+  useGridItem,
+  useGridItemProperty,
+  GridContext,
+  GridProvider,
+} from "@seij/yagrid/dist/GridContext";
+import {
   Button,
+  ButtonBase,
   Paper,
   Table,
   TableBody,
@@ -9,7 +17,12 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Toolbar,
+  Grid as MaterialGrid,
+  TableProps,
+  Typography,
 } from "@material-ui/core";
+import { GridColumnDefinitionInternal } from "@seij/yagrid/dist/types";
 
 interface SampleData {
   id: string;
@@ -24,9 +37,8 @@ function App() {
   }
   const gridProps: GridProps<SampleData> = {
     columns: [
-      { name: "id" },
-      {
-        name: "label",
+      { name: "id", label: "#" },
+      { name: "label", label:"Item name",
         editor: (item, onValueChange) => {
           return (
             <input
@@ -40,6 +52,7 @@ function App() {
       },
       {
         name: "amount",
+        label: "Amount €",
         editor: (item, onValueChange) => {
           return (
             <input
@@ -106,16 +119,141 @@ function App() {
               </TableRow>
             </TableBody>
           </Table>
-          
         </TableContainer>
         <hr />
-        <TableContainer  component={Paper}>
-          <Grid {...gridProps} />
-        </TableContainer>
+        <MaterialGrid container spacing={2}>
+          <MaterialGrid item xs={6}>
+            <Typography variant="h5">Material</Typography>
+            <YAGridMaterial {...gridProps} size={"small"} />
+          </MaterialGrid>
+          <MaterialGrid item xs={6}>
+            <Typography variant="h5">Not material</Typography>
+            <Grid {...gridProps} />
+          </MaterialGrid>
+        </MaterialGrid>
       </main>
     </div>
   );
 }
+const YAGridMaterial: React.FC<GridProps<any> & TableProps> = (props) => {
+  return (
+    <GridProvider
+      columns={props.columns}
+      types={props.types}
+      data={props.data}
+      plugins={props.plugins}
+      identifierProperty={props.identifierProperty}
+    >
+      <YAGridMaterial2 {...props} />
+    </GridProvider>
+  );
+};
+const YAGridMaterial2: React.FC<GridProps<any>> = (props) => {
+  const gridContext = useGrid();
+  const {
+    extensions,
+    columnDefinitions,
+    resolvedData,
+    dataListTransform,
+    identifierProperty,
+    state,
+    handleEditItemChange,
+  } = gridContext;
+  const hasActionsStart = extensions.actionItemList.some(
+    (action) => action.position === "start"
+  );
+  console.log(gridContext);
+  return (
+    <div>
+      <Toolbar>
+        {extensions.actionGenericList.map((action) => (
+          <Button>{action.render}</Button>
+        ))}
+      </Toolbar>
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              {columnDefinitions.map((column) => {
+                console.log("colonnes?", column);
+                return (
+                  <TableCell key={column.name} variant="head">
+                    {column.label}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          </TableHead>
+          <YAGridTableBodyRows />
+        </Table>
+      </TableContainer>
+    </div>
+  );
+};
+
+const YAGridTableBodyRows: React.FC<{}> = (props) => {
+  const gridContext = useGrid();
+  const {
+    extensions,
+    columnDefinitions,
+    dataListTransform,
+    identifierProperty,
+    state,
+    handleEditItemChange,
+  } = gridContext;
+  return (
+    <TableBody>
+      {dataListTransform.map((item) => (
+        <YAGridTableBodyRow item={item} />
+      ))}
+    </TableBody>
+  );
+};
+
+const YAGridTableBodyRow: React.FC<{ item: any }> = ({ item }) => {
+  const gridContext = useGrid();
+  const {
+    identifierProperty,
+    columnDefinitions,
+    state,
+    handleEditItemChange,
+  } = gridContext;
+  const {
+    selectDisplayedItemActions,
+    selectExtraItems: extraItemList,
+  } = useGridItem(item, gridContext);
+  return (
+    <TableRow key={item[identifierProperty]}>
+      {columnDefinitions.map((column) => (
+        <YAGridTableCell item={item} column={column} />
+      ))}
+    </TableRow>
+  );
+};
+
+const YAGridTableCell: React.FC<{
+  column: GridColumnDefinitionInternal<any>;
+  item: any;
+}> = ({ item, column }) => {
+  const gridContext = useGrid();
+  const {
+    identifierProperty,
+    columnDefinitions,
+    state,
+    handleEditItemChange,
+  } = gridContext;
+  const {
+    selectDisplayedItemActions,
+    selectExtraItems: extraItemList,
+  } = useGridItem(item, gridContext);
+  const { editing } = useGridItemProperty(column.name, item, gridContext);
+  return (
+    <TableCell key={column.name}>
+      {editing && column.editor
+        ? column.editor(state.editedItemValue, handleEditItemChange)
+        : column.render(item)}
+    </TableCell>
+  );
+};
 
 export default App;
-
