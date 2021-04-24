@@ -1,8 +1,15 @@
 import React from "react";
-import { EditDelete, EditInlineAdd, Table, TableProps } from "@seij/yagrid";
-import "tailwindcss/dist/tailwind.min.css";
-import "@tailwindcss/forms/dist/forms.css";
-import { EditInline } from "@seij/yagrid";
+import { ItemDelete, ItemAdd, ItemEdit, Grid, GridProps } from "@seij/yagrid";
+import {
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@material-ui/core";
 
 interface SampleData {
   id: string;
@@ -15,7 +22,7 @@ function App() {
   for (let i = 1; i < 100; i++) {
     data.push({ id: "" + i, label: "item " + i, amount: i * 10 });
   }
-  const gridProps: TableProps<SampleData> = {
+  const gridProps: GridProps<SampleData> = {
     columns: [
       { name: "id" },
       {
@@ -31,24 +38,32 @@ function App() {
           );
         },
       },
-      { name: "amount",
-    editor:(item, onValueChange)=>{
-      return <input type="number" onChange={evt => onValueChange({...item, amount: parseInt(evt.target.value)})} />
-    } },
+      {
+        name: "amount",
+        editor: (item, onValueChange) => {
+          return (
+            <input
+              type="number"
+              onChange={(evt) =>
+                onValueChange({ ...item, amount: parseInt(evt.target.value) })
+              }
+            />
+          );
+        },
+      },
     ],
     data: data,
     plugins: [
-      EditInline.editInline({
+      ItemEdit.create({
         onEdit: async () => {},
         editable: (data) => data.amount < 100,
       }),
-      EditDelete.deletePlugin({ onDelete: async (item) => {} }),
-      EditInlineAdd.editorAdd({
+      ItemDelete.create({ onDelete: async (item) => {} }),
+      ItemAdd.create({
         onAddConfirm: async () => {},
         onAddTemplate: async () => ({ id: "-1", label: "default", amount: 0 }),
       }),
     ],
-    editable: true,
   };
   return (
     <div className="App">
@@ -56,10 +71,51 @@ function App() {
         <h1>Sample table</h1>
       </header>
       <main>
-        <Table {...gridProps} />
+        <Button variant="contained" color="primary">
+          Hello world
+        </Button>
+        <TableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Dessert (100g serving)</TableCell>
+                <TableCell>Calories</TableCell>
+                <TableCell>Fat&nbsp;(g)</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>1</TableCell>
+                <TableCell>2</TableCell>
+                <TableCell>3</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>1</TableCell>
+                <TableCell>2</TableCell>
+                <TableCell>3</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>1</TableCell>
+                <TableCell>2</TableCell>
+                <TableCell>3</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>1</TableCell>
+                <TableCell>2</TableCell>
+                <TableCell>3</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+          
+        </TableContainer>
+        <hr />
+        <TableContainer  component={Paper}>
+          <Grid {...gridProps} />
+        </TableContainer>
       </main>
     </div>
   );
 }
 
 export default App;
+

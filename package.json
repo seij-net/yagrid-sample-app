@@ -4,7 +4,9 @@
   "private": true,
   "@seij/yagrid": "0.0.0",
   "dependencies": {
-    "@seij/yagrid": "file:./imports/yagrid",
+    "@material-ui/core": "^4.11.3",
+    "@material-ui/icons": "^4.11.2",
+    "@seij/yagrid": "0.1.6",
     "@tailwindcss/forms": "^0.3.2",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
