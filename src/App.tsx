@@ -4,8 +4,8 @@ import {
   useGrid,
   useGridItem,
   useGridItemProperty,
-  GridContext,
   GridProvider,
+  LoadingState,
 } from "@seij/yagrid/dist/GridContext";
 import {
   Button,
@@ -22,7 +22,14 @@ import {
   TableProps,
   Typography,
 } from "@material-ui/core";
-import { GridColumnDefinitionInternal } from "@seij/yagrid/dist/types";
+import {
+  GridColumnDefinitionInternal,
+  GridPlugin,
+  TableAction,
+  TableGenericAction,
+} from "@seij/yagrid/dist/types";
+import { overridePluginGenericAction } from "./utils/pluginUtils";
+import { useItemAdd } from "@seij/yagrid/dist/plugins/item-add";
 
 interface SampleData {
   id: string;
@@ -38,7 +45,9 @@ function App() {
   const gridProps: GridProps<SampleData> = {
     columns: [
       { name: "id", label: "#" },
-      { name: "label", label:"Item name",
+      {
+        name: "label",
+        label: "Item name",
         editor: (item, onValueChange) => {
           return (
             <input
@@ -73,8 +82,15 @@ function App() {
       }),
       ItemDelete.create({ onDelete: async (item) => {} }),
       ItemAdd.create({
+        labelAddButton: "Ajouter",
+        labelAddButtonCancel: "Annuler",
+        labelAddButtonConfirm: "OK",
         onAddConfirm: async () => {},
-        onAddTemplate: async () => ({ id: "-1", label: "default", amount: 0 }),
+        onAddTemplate: async () => ({
+          id: "-1",
+          label: "default",
+          amount: 0,
+        }),
       }),
     ],
   };
@@ -84,43 +100,6 @@ function App() {
         <h1>Sample table</h1>
       </header>
       <main>
-        <Button variant="contained" color="primary">
-          Hello world
-        </Button>
-        <TableContainer component={Paper}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Dessert (100g serving)</TableCell>
-                <TableCell>Calories</TableCell>
-                <TableCell>Fat&nbsp;(g)</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                <TableCell>1</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>3</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>1</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>3</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>1</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>3</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>1</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>3</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <hr />
         <MaterialGrid container spacing={2}>
           <MaterialGrid item xs={6}>
             <Typography variant="h5">Material</Typography>
@@ -135,16 +114,19 @@ function App() {
     </div>
   );
 }
+
+
 const YAGridMaterial: React.FC<GridProps<any> & TableProps> = (props) => {
+  const materialProps = toMaterialProps(props);
   return (
     <GridProvider
-      columns={props.columns}
-      types={props.types}
-      data={props.data}
-      plugins={props.plugins}
-      identifierProperty={props.identifierProperty}
+      columns={materialProps.columns}
+      types={materialProps.types}
+      data={materialProps.data}
+      plugins={materialProps.plugins}
+      identifierProperty={materialProps.identifierProperty}
     >
-      <YAGridMaterial2 {...props} />
+      <YAGridMaterial2 {...materialProps} />
     </GridProvider>
   );
 };
@@ -162,20 +144,21 @@ const YAGridMaterial2: React.FC<GridProps<any>> = (props) => {
   const hasActionsStart = extensions.actionItemList.some(
     (action) => action.position === "start"
   );
-  console.log(gridContext);
+
   return (
     <div>
-      <Toolbar>
-        {extensions.actionGenericList.map((action) => (
-          <Button>{action.render}</Button>
-        ))}
-      </Toolbar>
+      <div>
+        {extensions.actionGenericList.map(action => {
+          // const ActionRender = action.render
+          // return <ActionRender key={action.name} />
+          return <AddButtonMaterial key={action.name} />
+        })}
+      </div>
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
-            <TableRow>
+            <TableRow >
               {columnDefinitions.map((column) => {
-                console.log("colonnes?", column);
                 return (
                   <TableCell key={column.name} variant="head">
                     {column.label}
@@ -191,6 +174,34 @@ const YAGridMaterial2: React.FC<GridProps<any>> = (props) => {
   );
 };
 
+function toMaterialProps<T>(props: GridProps<T>): GridProps<T> {
+  const plugins = props.plugins.map((plugin) => {
+    switch (plugin.name) {
+      case "edit_add":
+        return toMaterialPropsPluginAdd(plugin);
+      default:
+        return plugin;
+    }
+  });
+  return { ...props, plugins: plugins };
+}
+
+function toMaterialPropsPluginAdd<T>(plugin: GridPlugin<T>): GridPlugin<T> {
+  return overridePluginGenericAction(plugin, "add", (action) => ({
+    render: () => {
+      console.log("on arrive là")
+      return <AddButtonMaterial />
+    },
+  }));
+}
+
+const AddButtonMaterial: React.FC<{}> = (props) => {
+  const { buttonProps, config } = useItemAdd()
+  
+  return <Button {...buttonProps}>{config.labelAddButton}</Button>;
+};
+
+
 const YAGridTableBodyRows: React.FC<{}> = (props) => {
   const gridContext = useGrid();
   const {
@@ -204,7 +215,7 @@ const YAGridTableBodyRows: React.FC<{}> = (props) => {
   return (
     <TableBody>
       {dataListTransform.map((item) => (
-        <YAGridTableBodyRow item={item} />
+        <YAGridTableBodyRow key={item.id} item={item} />
       ))}
     </TableBody>
   );
@@ -223,9 +234,9 @@ const YAGridTableBodyRow: React.FC<{ item: any }> = ({ item }) => {
     selectExtraItems: extraItemList,
   } = useGridItem(item, gridContext);
   return (
-    <TableRow key={item[identifierProperty]}>
+    <TableRow>
       {columnDefinitions.map((column) => (
-        <YAGridTableCell item={item} column={column} />
+        <YAGridTableCell key={column.name} item={item} column={column} />
       ))}
     </TableRow>
   );
